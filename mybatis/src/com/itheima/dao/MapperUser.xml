@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itheima.dao.MapperUser">
+	<resultMap type="user" id="orderdsa">
+		<id column="id" property="id"/>
+		<result column="username" property="username"/>
+		<result column="sex" property="sex"/>
+		<result column="birthday" property="birthday"/>
+		<result column="address" property="address"/>
+		<collection property="orders" ofType="com.itheima.domian.Orders">
+			<id column="id" property="id"/>
+			<result column="user_id" property="userId"/>
+			<result column="number" property="number"/>
+			<result column="createtime" property="createtime"/>
+		</collection>
+		
+	</resultMap>
+	<sql id="selectList">select * from user</sql>
+	<select id="getUserById" parameterType="int" resultType="User">
+		select * from user where id=#{id}
+	</select>
+	<select id="getUserByName" parameterType="string" resultType="user">
+	SELECT * FROM USER WHERE USERNAME LIKE '%${value}%'
+	</select>
+	<insert id="addUser" parameterType="user">
+		<selectKey keyProperty="id" resultType="int" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		insert into user (username,sex,birthday,address) 
+		values(#{username},#{sex},#{birthday},#{address}) 
+	</insert>
+	<update id="updateUser" parameterType="user">
+		update user set username=#{username} where id=#{id}
+	</update>
+	<delete id="deleteUserById" parameterType="int">
+		delete from user where id=#{id}
+	</delete>
+	<select id="findOneByName" parameterType="QueryVo" resultType="user">
+		select * from user where username=#{user.username}
+	</select>
+	<select id="countUser" resultType="Integer">
+		select count(*) from user
+	</select>
+	<select id="selectUserSexAndName" parameterType="user" resultType="user">
+		<include refid="selectList"/>
+		<where>
+		<if test="sex != null and sex != ''">
+			 and sex=#{sex}
+		</if>
+		<if test="username != null and username != ''">
+			 and username = #{username}
+		</if>
+		</where>
+	</select>
+	<select id="getUserByaForId" parameterType="user" resultType="user">
+		<include refid="selectList"/>
+		<where>
+			<foreach collection="ids" open="id in (" close=")" separator="," item="id">
+				#{id}
+			</foreach>
+		</where>
+	</select>
+	<select id="getOrderUserById" parameterType="int" resultType="orderUser">
+		select 
+		o.id,
+	    o.user_id userId, 
+	    o.number,
+	 	o.createtime,
+	 	u.username 
+	 	from orders o left join user u on u.id=o.user_id
+	 	<where>
+	 		and o.id=#{value}
+	 	</where>
+	</select>
+	<select id="getOrdersById" resultMap="orderdsa">
+	 	SELECT
+		u.id,
+		u.username,
+		u.birthday,
+		u.sex,
+		u.address,
+		o.id oid,
+		o.number,
+		o.createtime,
+		o.note
+		FROM
+		`user` u
+	LEFT JOIN `order` o ON u.id = o.user_id
+		
+	</select>
+</mapper>
